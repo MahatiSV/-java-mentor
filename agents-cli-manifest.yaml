@@ -1,0 +1,17 @@
+schema_version: "1.0"
+name: java-mentor
+display_name: JavaMentor AI
+description: >
+  A production-grade multi-agent Java learning platform built with Google ADK.
+  Covers Core Java, Java 21+ features, Spring/Spring Boot, quizzes, interview prep,
+  and live code execution — all in a beautiful adaptive UI.
+version: 0.1.0
+entry_point: java_mentor.agent:root_agent
+framework: google-adk
+model: gemini-2.5-flash
+tags:
+  - education
+  - java
+  - multi-agent
+  - learning
+  - spring-boot

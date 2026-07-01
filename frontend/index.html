@@ -1,0 +1,1588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JavaMentor AI — Your Adaptive Java Learning Companion</title>
+  <meta name="description" content="Master Java from basics to Spring Boot with JavaMentor AI. Adaptive learning, live code execution, interview prep, and quizzes — all in one place." />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <!-- Marked.js — Markdown renderer -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <!-- Highlight.js — Syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/java.min.js"></script>
+
+  <!-- Mermaid.js — Diagram renderer -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+  <style>
+    /* ═══════════════════════════════════════════════════════════════
+       CSS VARIABLES — Design Tokens
+    ═══════════════════════════════════════════════════════════════ */
+    :root {
+      --bg-base:        #050510;
+      --bg-surface:     #0d0d1f;
+      --bg-elevated:    #13132a;
+      --bg-glass:       rgba(255,255,255,0.04);
+      --bg-glass-hover: rgba(255,255,255,0.07);
+      --border:         rgba(255,255,255,0.08);
+      --border-bright:  rgba(255,255,255,0.15);
+
+      --purple-500: #8b5cf6;
+      --purple-600: #7c3aed;
+      --purple-400: #a78bfa;
+      --blue-500:   #3b82f6;
+      --blue-400:   #60a5fa;
+      --cyan-400:   #22d3ee;
+      --green-400:  #4ade80;
+      --red-400:    #f87171;
+      --amber-400:  #fbbf24;
+      --orange-400: #fb923c;
+
+      --text-primary:   #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted:     #475569;
+
+      --grad-primary: linear-gradient(135deg, #7c3aed 0%, #3b82f6 50%, #22d3ee 100%);
+      --grad-surface: linear-gradient(135deg, rgba(124,58,237,0.1) 0%, rgba(59,130,246,0.1) 100%);
+
+      --radius-sm:  6px;
+      --radius-md:  12px;
+      --radius-lg:  18px;
+      --radius-xl:  24px;
+
+      --shadow-glow-purple: 0 0 30px rgba(124,58,237,0.3);
+      --shadow-glow-blue:   0 0 30px rgba(59,130,246,0.3);
+      --shadow-card: 0 4px 24px rgba(0,0,0,0.4);
+
+      --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       RESET & BASE
+    ═══════════════════════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { height: 100%; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg-base);
+      color: var(--text-primary);
+      height: 100vh;
+      overflow: hidden;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 20% 20%, rgba(124,58,237,0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(59,130,246,0.08) 0%, transparent 60%);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       APP LAYOUT
+    ═══════════════════════════════════════════════════════════════ */
+    #app {
+      display: grid;
+      grid-template-rows: 56px 1fr;
+      grid-template-columns: 260px 1fr 360px;
+      grid-template-areas:
+        "header header header"
+        "sidebar chat code";
+      height: 100vh;
+      gap: 0;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       HEADER
+    ═══════════════════════════════════════════════════════════════ */
+    #header {
+      grid-area: header;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 16px;
+      background: rgba(13,13,31,0.9);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+    }
+
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--grad-primary);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      box-shadow: var(--shadow-glow-purple);
+    }
+
+    .logo-text {
+      font-size: 17px;
+      font-weight: 700;
+      background: var(--grad-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.3px;
+    }
+
+    .header-spacer { flex: 1; }
+
+    /* Level Selector */
+    .level-selector {
+      display: flex;
+      gap: 6px;
+      background: var(--bg-glass);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 4px;
+    }
+
+    .level-btn {
+      padding: 5px 14px;
+      border-radius: var(--radius-md);
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: inherit;
+    }
+
+    .level-btn:hover { color: var(--text-primary); background: var(--bg-glass-hover); }
+
+    .level-btn.active {
+      background: var(--grad-primary);
+      color: white;
+      box-shadow: 0 2px 10px rgba(124,58,237,0.4);
+    }
+
+    .java-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      background: var(--bg-glass);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      font-size: 12px;
+      color: var(--cyan-400);
+      font-weight: 500;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green-400);
+      box-shadow: 0 0 6px var(--green-400);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       SIDEBAR
+    ═══════════════════════════════════════════════════════════════ */
+    #sidebar {
+      grid-area: sidebar;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-surface);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    .sidebar-section {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-title {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    /* Quick Actions */
+    .quick-actions { display: flex; flex-direction: column; gap: 6px; }
+
+    .quick-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background: var(--bg-glass);
+      color: var(--text-primary);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: inherit;
+      width: 100%;
+      text-align: left;
+    }
+
+    .quick-btn:hover {
+      background: var(--bg-glass-hover);
+      border-color: var(--border-bright);
+      transform: translateX(2px);
+    }
+
+    .quick-btn .btn-icon {
+      font-size: 16px;
+      width: 20px;
+      text-align: center;
+    }
+
+    /* Topic Tree */
+    .topic-list { list-style: none; }
+
+    .topic-item { margin-bottom: 2px; }
+
+    .topic-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: 13px;
+      color: var(--text-secondary);
+      user-select: none;
+    }
+
+    .topic-header:hover { background: var(--bg-glass-hover); color: var(--text-primary); }
+    .topic-header.active { color: var(--purple-400); background: rgba(139,92,246,0.1); }
+
+    .topic-arrow {
+      font-size: 9px;
+      transition: transform var(--transition);
+      margin-left: auto;
+      color: var(--text-muted);
+    }
+
+    .topic-item.expanded .topic-arrow { transform: rotate(90deg); }
+
+    .subtopic-list {
+      list-style: none;
+      padding-left: 28px;
+      display: none;
+    }
+
+    .topic-item.expanded .subtopic-list { display: block; }
+
+    .subtopic-item {
+      padding: 5px 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      transition: var(--transition);
+    }
+
+    .subtopic-item:hover { color: var(--text-secondary); background: var(--bg-glass); }
+
+    /* Progress */
+    .progress-ring-container {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .progress-ring {
+      width: 56px;
+      height: 56px;
+      flex-shrink: 0;
+    }
+
+    .progress-ring circle {
+      fill: none;
+      stroke-width: 4;
+    }
+
+    .progress-bg { stroke: var(--border); }
+    .progress-fill {
+      stroke: url(#progressGrad);
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1s ease;
+      transform: rotate(-90deg);
+      transform-origin: 50% 50%;
+    }
+
+    .progress-info { flex: 1; }
+    .progress-label { font-size: 11px; color: var(--text-muted); }
+    .progress-value { font-size: 20px; font-weight: 700; color: var(--text-primary); }
+    .progress-sub { font-size: 11px; color: var(--text-secondary); }
+
+    /* ═══════════════════════════════════════════════════════════════
+       CHAT PANEL
+    ═══════════════════════════════════════════════════════════════ */
+    #chat-panel {
+      grid-area: chat;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    /* Welcome screen */
+    .welcome-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      padding: 40px 20px;
+      gap: 24px;
+      text-align: center;
+    }
+
+    .welcome-icon {
+      width: 80px;
+      height: 80px;
+      background: var(--grad-primary);
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      box-shadow: var(--shadow-glow-purple);
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .welcome-title {
+      font-size: 26px;
+      font-weight: 700;
+      background: var(--grad-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .welcome-subtitle {
+      font-size: 14px;
+      color: var(--text-secondary);
+      max-width: 400px;
+      line-height: 1.6;
+    }
+
+    .suggestion-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      max-width: 500px;
+    }
+
+    .chip {
+      padding: 8px 16px;
+      background: var(--bg-glass);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: inherit;
+    }
+
+    .chip:hover {
+      background: rgba(124,58,237,0.15);
+      border-color: var(--purple-500);
+      color: var(--purple-400);
+      transform: translateY(-2px);
+    }
+
+    /* Messages */
+    .message {
+      display: flex;
+      gap: 12px;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .message.user { flex-direction: row-reverse; }
+
+    .message-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+
+    .message.ai .message-avatar {
+      background: var(--grad-primary);
+      box-shadow: var(--shadow-glow-purple);
+    }
+
+    .message.user .message-avatar {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+    }
+
+    .message-content {
+      flex: 1;
+      max-width: calc(100% - 44px);
+    }
+
+    .message-bubble {
+      padding: 14px 18px;
+      border-radius: var(--radius-lg);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .message.ai .message-bubble {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md) var(--radius-lg) var(--radius-lg) var(--radius-lg);
+    }
+
+    .message.user .message-bubble {
+      background: linear-gradient(135deg, #7c3aed22, #3b82f622);
+      border: 1px solid rgba(124,58,237,0.3);
+      border-radius: var(--radius-lg) var(--radius-md) var(--radius-lg) var(--radius-lg);
+      text-align: right;
+    }
+
+    .message-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .message.user .message-meta { flex-direction: row-reverse; }
+
+    .agent-tag {
+      padding: 2px 8px;
+      background: rgba(124,58,237,0.15);
+      border: 1px solid rgba(124,58,237,0.3);
+      border-radius: 99px;
+      color: var(--purple-400);
+      font-size: 10px;
+      font-weight: 500;
+    }
+
+    /* Typing indicator */
+    .typing-indicator {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .typing-dots {
+      display: flex;
+      gap: 4px;
+      padding: 14px 18px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md) var(--radius-lg) var(--radius-lg) var(--radius-lg);
+    }
+
+    .typing-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--purple-500);
+      animation: typingBounce 1.2s infinite ease-in-out;
+    }
+
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typingBounce {
+      0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+      40%           { transform: translateY(-8px); opacity: 1; }
+    }
+
+    /* Markdown content styles */
+    .message-bubble h1,
+    .message-bubble h2,
+    .message-bubble h3 {
+      color: var(--purple-400);
+      margin: 16px 0 8px;
+      font-weight: 600;
+    }
+
+    .message-bubble h1 { font-size: 18px; }
+    .message-bubble h2 { font-size: 16px; }
+    .message-bubble h3 { font-size: 14px; }
+
+    .message-bubble p { margin: 8px 0; }
+
+    .message-bubble ul,
+    .message-bubble ol {
+      padding-left: 20px;
+      margin: 8px 0;
+    }
+
+    .message-bubble li { margin: 4px 0; }
+
+    .message-bubble code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      background: rgba(0,0,0,0.4);
+      border: 1px solid var(--border);
+      padding: 1px 5px;
+      border-radius: 4px;
+      color: var(--cyan-400);
+    }
+
+    .message-bubble pre {
+      margin: 12px 0;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .message-bubble pre code {
+      background: transparent;
+      border: none;
+      padding: 0;
+      color: inherit;
+      font-size: 13px;
+    }
+
+    .code-block-wrapper {
+      position: relative;
+    }
+
+    .code-block-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 14px;
+      background: rgba(0,0,0,0.3);
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-muted);
+    }
+
+    .btn-copy-code, .btn-run-code {
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--bg-glass);
+      color: var(--text-secondary);
+      font-size: 11px;
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: inherit;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn-run-code {
+      border-color: rgba(124,58,237,0.4);
+      color: var(--purple-400);
+    }
+
+    .btn-copy-code:hover { background: var(--bg-glass-hover); color: var(--text-primary); }
+    .btn-run-code:hover { background: rgba(124,58,237,0.2); color: var(--purple-300); }
+
+    /* Mermaid diagrams */
+    .mermaid-wrapper {
+      margin: 12px 0;
+      padding: 16px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow-x: auto;
+    }
+
+    .mermaid { text-align: center; }
+
+    /* Table styles */
+    .message-bubble table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      font-size: 13px;
+    }
+
+    .message-bubble th {
+      background: rgba(124,58,237,0.15);
+      padding: 8px 12px;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+      color: var(--purple-400);
+    }
+
+    .message-bubble td {
+      padding: 7px 12px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-secondary);
+    }
+
+    .message-bubble tr:hover td { background: var(--bg-glass); }
+
+    /* ═══════════════════════════════════════════════════════════════
+       CHAT INPUT
+    ═══════════════════════════════════════════════════════════════ */
+    .chat-input-area {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      background: var(--bg-surface);
+    }
+
+    .mode-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .mode-tab {
+      padding: 5px 12px;
+      border-radius: 99px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 12px;
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: inherit;
+    }
+
+    .mode-tab:hover { color: var(--text-secondary); border-color: var(--border-bright); }
+    .mode-tab.active { background: rgba(124,58,237,0.2); border-color: var(--purple-500); color: var(--purple-400); }
+
+    .input-wrapper {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+    }
+
+    #chat-input {
+      flex: 1;
+      padding: 12px 16px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      color: var(--text-primary);
+      font-size: 14px;
+      font-family: inherit;
+      resize: none;
+      min-height: 44px;
+      max-height: 140px;
+      outline: none;
+      transition: border-color var(--transition);
+      line-height: 1.5;
+    }
+
+    #chat-input::placeholder { color: var(--text-muted); }
+
+    #chat-input:focus {
+      border-color: var(--purple-500);
+      box-shadow: 0 0 0 2px rgba(124,58,237,0.15);
+    }
+
+    #send-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-md);
+      border: none;
+      background: var(--grad-primary);
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: var(--shadow-glow-purple);
+    }
+
+    #send-btn:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(124,58,237,0.5); }
+    #send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       CODE PANEL (Right)
+    ═══════════════════════════════════════════════════════════════ */
+    #code-panel {
+      grid-area: code;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-surface);
+      border-left: 1px solid var(--border);
+    }
+
+    .code-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .code-panel-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .java-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--orange-400);
+    }
+
+    .code-toolbar { display: flex; gap: 6px; }
+
+    .toolbar-btn {
+      padding: 5px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--bg-glass);
+      color: var(--text-secondary);
+      font-size: 12px;
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .toolbar-btn:hover { background: var(--bg-glass-hover); color: var(--text-primary); }
+
+    .toolbar-btn.run {
+      background: linear-gradient(135deg, rgba(124,58,237,0.3), rgba(59,130,246,0.3));
+      border-color: rgba(124,58,237,0.5);
+      color: var(--purple-400);
+    }
+
+    .toolbar-btn.run:hover { background: linear-gradient(135deg, rgba(124,58,237,0.5), rgba(59,130,246,0.5)); }
+
+    #code-editor {
+      flex: 1;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      padding: 16px;
+      background: #0d0d1a;
+      color: #e2e8f0;
+      border: none;
+      outline: none;
+      resize: none;
+      width: 100%;
+      overflow-y: auto;
+      tab-size: 4;
+    }
+
+    #code-editor:focus { outline: none; }
+
+    /* Output panel */
+    .output-panel {
+      border-top: 1px solid var(--border);
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .output-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 16px;
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    #output-content {
+      padding: 12px 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--text-secondary);
+      white-space: pre-wrap;
+      min-height: 60px;
+    }
+
+    #output-content.success { color: var(--green-400); }
+    #output-content.error { color: var(--red-400); }
+    #output-content.empty { color: var(--text-muted); font-style: italic; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       LOADING SPINNER
+    ═══════════════════════════════════════════════════════════════ */
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.2);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ═══════════════════════════════════════════════════════════════
+       NOTIFICATION TOAST
+    ═══════════════════════════════════════════════════════════════ */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      padding: 12px 20px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-size: 13px;
+      box-shadow: var(--shadow-card);
+      z-index: 999;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: var(--transition);
+      pointer-events: none;
+    }
+
+    #toast.show { opacity: 1; transform: translateY(0); }
+
+    /* ═══════════════════════════════════════════════════════════════
+       SCROLLBARS
+    ═══════════════════════════════════════════════════════════════ */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--border-bright); }
+  </style>
+</head>
+
+<body>
+<div id="app">
+
+  <!-- ═══════════════════════════════════════════════════════════
+       HEADER
+  ═══════════════════════════════════════════════════════════ -->
+  <header id="header">
+    <div class="header-logo">
+      <div class="logo-icon">🎓</div>
+      <span class="logo-text">JavaMentor AI</span>
+    </div>
+
+    <div class="level-selector" id="level-selector">
+      <button class="level-btn active" data-level="Beginner" onclick="setLevel(this)">🟢 Beginner</button>
+      <button class="level-btn" data-level="Intermediate" onclick="setLevel(this)">🟡 Intermediate</button>
+      <button class="level-btn" data-level="Advanced" onclick="setLevel(this)">🔴 Advanced</button>
+    </div>
+
+    <div class="header-spacer"></div>
+
+    <div class="java-badge">
+      <div class="status-dot"></div>
+      Java 21+ LTS · Live
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SIDEBAR
+  ═══════════════════════════════════════════════════════════ -->
+  <aside id="sidebar">
+    <!-- Quick Actions -->
+    <div class="sidebar-section">
+      <div class="sidebar-title">Quick Actions</div>
+      <div class="quick-actions">
+        <button class="quick-btn" onclick="sendQuickMessage('🗺️ Give me a personalized learning roadmap based on my current level')">
+          <span class="btn-icon">🗺️</span> Learning Roadmap
+        </button>
+        <button class="quick-btn" onclick="sendQuickMessage('🎯 Start a Java quiz on the topic I was just studying')">
+          <span class="btn-icon">🎯</span> Start Quiz
+        </button>
+        <button class="quick-btn" onclick="sendQuickMessage('💼 Start a mock Java technical interview')">
+          <span class="btn-icon">💼</span> Mock Interview
+        </button>
+        <button class="quick-btn" onclick="sendQuickMessage('🚀 What are the major features in Java 21 and Java 24?')">
+          <span class="btn-icon">🚀</span> Java 21/24 Features
+        </button>
+        <button class="quick-btn" onclick="loadCodeSnippet()">
+          <span class="btn-icon">▶️</span> Run Sample Code
+        </button>
+      </div>
+    </div>
+
+    <!-- Topic Navigator -->
+    <div class="sidebar-section" style="flex:1">
+      <div class="sidebar-title">Topics</div>
+      <ul class="topic-list" id="topic-list">
+        <!-- Dynamically populated -->
+      </ul>
+    </div>
+
+    <!-- Progress -->
+    <div class="sidebar-section">
+      <div class="sidebar-title">Session Progress</div>
+      <div class="progress-ring-container">
+        <svg class="progress-ring" viewBox="0 0 56 56">
+          <defs>
+            <linearGradient id="progressGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#7c3aed"/>
+              <stop offset="100%" stop-color="#22d3ee"/>
+            </linearGradient>
+          </defs>
+          <circle class="progress-bg" cx="28" cy="28" r="22" />
+          <circle class="progress-fill" id="progress-circle" cx="28" cy="28" r="22"
+            stroke-dasharray="138.2"
+            stroke-dashoffset="138.2"
+          />
+        </svg>
+        <div class="progress-info">
+          <div class="progress-value" id="progress-value">0%</div>
+          <div class="progress-label">Topics covered</div>
+          <div class="progress-sub" id="progress-sub">Keep going! ☕</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       CHAT PANEL
+  ═══════════════════════════════════════════════════════════ -->
+  <main id="chat-panel">
+    <div class="chat-messages" id="chat-messages">
+      <!-- Welcome Screen -->
+      <div class="welcome-screen" id="welcome-screen">
+        <div class="welcome-icon">☕</div>
+        <h1 class="welcome-title">JavaMentor AI</h1>
+        <p class="welcome-subtitle">
+          Your adaptive Java learning companion. From "Hello World" to Virtual Threads —
+          I adapt to your level, run code live, and prep you for interviews.
+        </p>
+        <div class="suggestion-chips">
+          <button class="chip" onclick="sendQuickMessage('Explain Java Streams with a real-world analogy for a beginner')">🌊 Explain Streams</button>
+          <button class="chip" onclick="sendQuickMessage('What is the difference between HashMap and ConcurrentHashMap?')">🗺️ HashMap vs ConcurrentHashMap</button>
+          <button class="chip" onclick="sendQuickMessage('Show me Virtual Threads in Java 21 with a code example')">⚡ Virtual Threads</button>
+          <button class="chip" onclick="sendQuickMessage('What changed from Java 17 to Java 21?')">🚀 Java 17 → 21</button>
+          <button class="chip" onclick="sendQuickMessage('Quiz me on Java Collections')">🎯 Quiz: Collections</button>
+          <button class="chip" onclick="sendQuickMessage('Start a Spring Boot interview with me')">💼 Spring Boot Interview</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mode Tabs + Input -->
+    <div class="chat-input-area">
+      <div class="mode-tabs">
+        <button class="mode-tab active" id="mode-learn" onclick="setMode('learn', this)">📚 Learn</button>
+        <button class="mode-tab" id="mode-quiz" onclick="setMode('quiz', this)">🎯 Quiz</button>
+        <button class="mode-tab" id="mode-interview" onclick="setMode('interview', this)">💼 Interview</button>
+        <button class="mode-tab" id="mode-code" onclick="setMode('code', this)">⌨️ Code Review</button>
+      </div>
+      <div class="input-wrapper">
+        <textarea
+          id="chat-input"
+          placeholder="Ask me anything about Java... (Shift+Enter for newline)"
+          rows="1"
+          onkeydown="handleInputKey(event)"
+          oninput="autoResize(this)"
+        ></textarea>
+        <button id="send-btn" onclick="sendMessage()" title="Send message">
+          ➤
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       CODE PANEL (Right)
+  ═══════════════════════════════════════════════════════════ -->
+  <aside id="code-panel">
+    <div class="code-panel-header">
+      <div class="code-panel-title">
+        <div class="java-dot"></div>
+        Java Playground
+      </div>
+      <div class="code-toolbar">
+        <button class="toolbar-btn" onclick="clearCode()" title="Clear code">🗑️ Clear</button>
+        <button class="toolbar-btn" onclick="copyCode()" title="Copy code">📋 Copy</button>
+        <button class="toolbar-btn run" id="run-btn" onclick="runCode()" title="Run Java code">
+          ▶ Run
+        </button>
+      </div>
+    </div>
+
+    <textarea id="code-editor" spellcheck="false" placeholder="// Write Java code here and click ▶ Run
+// Code runs via Piston API (free, no setup)
+
+public class Main {
+    public static void main(String[] args) {
+        System.out.println(&quot;Hello from JavaMentor AI! ☕&quot;);
+    }
+}">public class Main {
+    public static void main(String[] args) {
+        // Java 21 — Virtual Threads demo
+        System.out.println("☕ JavaMentor AI — Live Code Execution");
+        System.out.println("Using: Piston API (free, no API key)");
+        System.out.println();
+        
+        // Simple warm-up example
+        var greeting = "Hello, Java World!";
+        System.out.println(greeting);
+        
+        // Records (Java 16+)
+        record Point(int x, int y) {
+            double distance() {
+                return Math.sqrt(x * x + y * y);
+            }
+        }
+        
+        var p = new Point(3, 4);
+        System.out.println("Point: " + p);
+        System.out.printf("Distance from origin: %.1f%n", p.distance());
+    }
+}</textarea>
+
+    <!-- Output Panel -->
+    <div class="output-panel">
+      <div class="output-header">
+        <span>⬛ Console Output</span>
+        <span id="runtime-badge" style="color: var(--cyan-400); font-weight: normal;"></span>
+      </div>
+      <pre id="output-content" class="empty">Click ▶ Run to execute your Java code...</pre>
+    </div>
+  </aside>
+
+</div>
+
+<!-- Toast Notification -->
+<div id="toast"></div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════════════════════ -->
+<script>
+// ─── Configuration ─────────────────────────────────────────
+const API_BASE = 'http://127.0.0.1:8090';
+let sessionId = null;
+let userId = 'user_' + Math.random().toString(36).substr(2, 8);
+let currentLevel = 'Beginner';
+let currentMode = 'learn';
+let topicsExplored = new Set();
+let isLoading = false;
+
+// ─── Mermaid Init ─────────────────────────────────────────
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'dark',
+  themeVariables: {
+    primaryColor: '#7c3aed',
+    primaryTextColor: '#f1f5f9',
+    primaryBorderColor: '#8b5cf6',
+    lineColor: '#475569',
+    secondaryColor: '#13132a',
+    tertiaryColor: '#0d0d1f',
+    background: '#050510',
+    mainBkg: '#13132a',
+    nodeBorder: '#7c3aed',
+    clusterBkg: '#0d0d1f',
+    titleColor: '#a78bfa',
+    edgeLabelBackground: '#13132a',
+    actorBkg: '#13132a',
+    actorBorder: '#7c3aed',
+    actorTextColor: '#f1f5f9',
+    signalColor: '#a78bfa',
+    signalTextColor: '#f1f5f9',
+  },
+  flowchart: { curve: 'basis', htmlLabels: true },
+  securityLevel: 'loose',
+});
+
+// ─── Marked.js Config ─────────────────────────────────────
+const renderer = new marked.Renderer();
+renderer.code = function(code, language) {
+  const lang = language || '';
+  if (lang === 'mermaid') {
+    return `<div class="mermaid-wrapper"><div class="mermaid">${code}</div></div>`;
+  }
+  const highlightedCode = lang && hljs.getLanguage(lang)
+    ? hljs.highlight(code, { language: lang }).value
+    : hljs.highlightAuto(code).value;
+  const isJava = lang === 'java' || lang === '';
+  const runBtn = isJava
+    ? `<button class="btn-run-code" onclick="runCodeFromChat(this)" title="Run in playground">▶ Run</button>`
+    : '';
+  return `
+    <div class="code-block-wrapper">
+      <div class="code-block-header">
+        <span>${lang || 'code'}</span>
+        <div style="display:flex;gap:6px;">
+          ${runBtn}
+          <button class="btn-copy-code" onclick="copyCodeBlock(this)" title="Copy">📋 Copy</button>
+        </div>
+      </div>
+      <pre><code class="hljs language-${lang}">${highlightedCode}</code></pre>
+    </div>`;
+};
+
+marked.setOptions({ renderer, breaks: true, gfm: true });
+
+// ─── Level Selection ──────────────────────────────────────
+function setLevel(btn) {
+  document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentLevel = btn.dataset.level;
+  showToast(`Level set to ${currentLevel}`);
+}
+
+// ─── Mode Selection ──────────────────────────────────────
+const modePrefixes = {
+  learn: '',
+  quiz: '🎯 [QUIZ MODE] ',
+  interview: '💼 [INTERVIEW MODE] ',
+  code: '⌨️ [CODE REVIEW] ',
+};
+
+function setMode(mode, btn) {
+  document.querySelectorAll('.mode-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentMode = mode;
+  const input = document.getElementById('chat-input');
+  const placeholders = {
+    learn: 'Ask me anything about Java...',
+    quiz: 'Type a topic to quiz on (e.g. "Collections") or just press Send...',
+    interview: 'Say "start" to begin a mock interview, or name a topic...',
+    code: 'Paste your Java code here for review...',
+  };
+  input.placeholder = placeholders[mode];
+}
+
+// ─── Sidebar Topics ──────────────────────────────────────
+async function loadTopics() {
+  try {
+    const res = await fetch(`${API_BASE}/api/topics`);
+    const data = await res.json();
+    renderTopics(data.topics);
+  } catch {
+    // Offline — use fallback
+    renderTopics([
+      { id: 'basics', label: '☕ Java Basics', subtopics: ['Variables', 'Control Flow', 'Methods'] },
+      { id: 'oop', label: '🏗️ OOP', subtopics: ['Classes', 'Inheritance', 'Interfaces'] },
+      { id: 'collections', label: '📦 Collections', subtopics: ['ArrayList', 'HashMap', 'Set'] },
+      { id: 'streams', label: '🌊 Streams', subtopics: ['Lambda', 'Stream API', 'Optional'] },
+      { id: 'concurrency', label: '⚡ Concurrency', subtopics: ['Threads', 'Virtual Threads'] },
+      { id: 'modern', label: '🚀 Modern Java', subtopics: ['Records', 'Sealed Classes', 'Pattern Matching'] },
+      { id: 'spring', label: '🌱 Spring', subtopics: ['IoC', 'AOP', 'MVC'] },
+      { id: 'springboot', label: '🥾 Spring Boot', subtopics: ['Auto-Config', 'JPA', 'Actuator'] },
+    ]);
+  }
+}
+
+function renderTopics(topics) {
+  const list = document.getElementById('topic-list');
+  list.innerHTML = topics.map(topic => `
+    <li class="topic-item" id="topic-${topic.id}">
+      <div class="topic-header" onclick="toggleTopic('${topic.id}', '${topic.label}', this)">
+        <span>${topic.label}</span>
+        <span class="topic-arrow">▶</span>
+      </div>
+      <ul class="subtopic-list">
+        ${(topic.subtopics || []).map(sub => `
+          <li class="subtopic-item" onclick="askAbout('${sub}')">
+            ${sub}
+          </li>
+        `).join('')}
+      </ul>
+    </li>
+  `).join('');
+}
+
+function toggleTopic(id, label, header) {
+  const item = document.getElementById('topic-' + id);
+  item.classList.toggle('expanded');
+  document.querySelectorAll('.topic-header').forEach(h => h.classList.remove('active'));
+  header.classList.add('active');
+}
+
+function askAbout(topic) {
+  const messages = {
+    'Variables': 'Explain Java variables and data types with examples',
+    'Control Flow': 'Explain Java control flow: if/else, switch, loops with examples',
+    'HashMap': 'How does HashMap work internally in Java? Explain with examples',
+    'ArrayList': 'Explain ArrayList in Java — when to use it and common operations',
+    'Threads': 'Explain Java threads and multithreading with examples',
+    'Virtual Threads': 'Show me Virtual Threads in Java 21 with a practical example',
+    'Records': 'Explain Java Records (Java 16+) with examples',
+    'IoC': 'Explain Inversion of Control and Dependency Injection in Spring',
+  };
+  const msg = messages[topic] || `Explain ${topic} in Java with examples and best practices`;
+  document.getElementById('chat-input').value = msg;
+  sendMessage();
+}
+
+// ─── Chat Sending ─────────────────────────────────────────
+async function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text || isLoading) return;
+
+  const prefix = modePrefixes[currentMode] || '';
+  const fullMessage = prefix + text;
+
+  // Clear input
+  input.value = '';
+  autoResize(input);
+
+  // Hide welcome screen
+  const welcome = document.getElementById('welcome-screen');
+  if (welcome) welcome.style.display = 'none';
+
+  // Show user message
+  addMessage(text, 'user');
+  setLoading(true);
+
+  try {
+    const res = await fetch(`${API_BASE}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: fullMessage,
+        session_id: sessionId,
+        user_id: userId,
+        level: currentLevel,
+      }),
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const data = await res.json();
+    sessionId = data.session_id;
+    addMessage(data.response, 'ai', data.agent_used);
+    updateProgress();
+
+  } catch (err) {
+    addMessage(
+      `⚠️ **Connection Error**\n\nCouldn't reach the JavaMentor AI server.\n\n` +
+      `Make sure the server is running:\n` +
+      "```\nuv run uvicorn java_mentor.fast_api_app:app --host 127.0.0.1 --port 8090 --reload\n```\n\n" +
+      `Error: ${err.message}`,
+      'ai', 'System'
+    );
+  } finally {
+    setLoading(false);
+  }
+}
+
+function sendQuickMessage(text) {
+  const input = document.getElementById('chat-input');
+  input.value = text;
+  sendMessage();
+}
+
+// ─── Message Rendering ────────────────────────────────────
+function addMessage(text, role, agentName) {
+  const container = document.getElementById('chat-messages');
+  const msgEl = document.createElement('div');
+  msgEl.className = `message ${role}`;
+
+  const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  let contentHtml;
+  if (role === 'ai') {
+    contentHtml = marked.parse(text || '');
+  } else {
+    contentHtml = `<span>${escapeHtml(text)}</span>`;
+  }
+
+  const agentTag = role === 'ai' && agentName && agentName !== 'unknown'
+    ? `<span class="agent-tag">${formatAgentName(agentName)}</span>`
+    : '';
+
+  msgEl.innerHTML = `
+    <div class="message-avatar">${role === 'ai' ? '🎓' : '👤'}</div>
+    <div class="message-content">
+      <div class="message-bubble">${contentHtml}</div>
+      <div class="message-meta">
+        <span>${time}</span>
+        ${agentTag}
+      </div>
+    </div>
+  `;
+
+  container.appendChild(msgEl);
+
+  // Render Mermaid diagrams
+  const mermaidEls = msgEl.querySelectorAll('.mermaid');
+  if (mermaidEls.length > 0) {
+    mermaid.init(undefined, mermaidEls);
+  }
+
+  // Scroll to bottom
+  container.scrollTop = container.scrollHeight;
+}
+
+function formatAgentName(name) {
+  const names = {
+    tutor_agent: '📚 Tutor',
+    quiz_agent: '🎯 Quiz Master',
+    code_agent: '⌨️ Code Expert',
+    interview_agent: '💼 Interview Coach',
+    news_agent: '📰 Java News',
+    learning_path_agent: '🗺️ Learning Path',
+    JavaMentorOrchestrator: '🎓 JavaMentor',
+  };
+  return names[name] || name;
+}
+
+function setLoading(loading) {
+  isLoading = loading;
+  const btn = document.getElementById('send-btn');
+  const container = document.getElementById('chat-messages');
+
+  if (loading) {
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div>';
+
+    // Add typing indicator
+    const typingEl = document.createElement('div');
+    typingEl.id = 'typing-indicator';
+    typingEl.className = 'typing-indicator';
+    typingEl.innerHTML = `
+      <div class="message-avatar" style="background:var(--grad-primary)">🎓</div>
+      <div class="typing-dots">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+    `;
+    container.appendChild(typingEl);
+    container.scrollTop = container.scrollHeight;
+  } else {
+    btn.disabled = false;
+    btn.innerHTML = '➤';
+    const typingEl = document.getElementById('typing-indicator');
+    if (typingEl) typingEl.remove();
+  }
+}
+
+// ─── Code Execution ─────────────────────────────────────
+async function runCode() {
+  const code = document.getElementById('code-editor').value.trim();
+  if (!code) { showToast('Write some Java code first!'); return; }
+
+  const runBtn = document.getElementById('run-btn');
+  const output = document.getElementById('output-content');
+  const badge = document.getElementById('runtime-badge');
+
+  runBtn.disabled = true;
+  runBtn.innerHTML = '<div class="spinner" style="width:12px;height:12px;border-width:2px;"></div> Running...';
+  output.className = '';
+  output.textContent = 'Compiling and executing...';
+
+  try {
+    const res = await fetch(`${API_BASE}/api/execute`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code }),
+    });
+
+    const data = await res.json();
+    badge.textContent = data.runtime_version || '';
+
+    if (data.success) {
+      output.className = 'success';
+      output.textContent = data.output || '(No output)';
+      if (data.stderr) {
+        output.textContent += '\n\n⚠️ stderr:\n' + data.stderr;
+      }
+    } else {
+      output.className = 'error';
+      output.textContent = (data.stderr || data.error || 'Unknown error');
+    }
+  } catch (err) {
+    output.className = 'error';
+    output.textContent = `Connection error: ${err.message}\n\nMake sure the JavaMentor server is running.`;
+  } finally {
+    runBtn.disabled = false;
+    runBtn.innerHTML = '▶ Run';
+  }
+}
+
+function runCodeFromChat(btn) {
+  // Find the code block and load it into the editor
+  const pre = btn.closest('.code-block-wrapper').querySelector('code');
+  if (!pre) return;
+  let code = pre.innerText;
+  document.getElementById('code-editor').value = code;
+  runCode();
+  document.getElementById('code-panel').scrollIntoView();
+}
+
+function clearCode() {
+  document.getElementById('code-editor').value = '';
+  document.getElementById('output-content').textContent = 'Click ▶ Run to execute your Java code...';
+  document.getElementById('output-content').className = 'empty';
+  document.getElementById('runtime-badge').textContent = '';
+}
+
+function copyCode() {
+  const code = document.getElementById('code-editor').value;
+  navigator.clipboard.writeText(code).then(() => showToast('Code copied! 📋'));
+}
+
+function copyCodeBlock(btn) {
+  const code = btn.closest('.code-block-wrapper').querySelector('code').innerText;
+  navigator.clipboard.writeText(code).then(() => showToast('Code copied! 📋'));
+}
+
+function loadCodeSnippet() {
+  document.getElementById('code-editor').value = `import java.util.List;
+import java.util.stream.Collectors;
+
+public class Main {
+    // Java Record (Java 16+)
+    record Student(String name, int grade) {}
+    
+    public static void main(String[] args) {
+        var students = List.of(
+            new Student("Alice", 92),
+            new Student("Bob", 78),
+            new Student("Charlie", 85),
+            new Student("Diana", 96),
+            new Student("Eve", 71)
+        );
+        
+        // Streams + Pattern matching
+        System.out.println("=== Students with grade >= 85 ===");
+        students.stream()
+            .filter(s -> s.grade() >= 85)
+            .sorted((a, b) -> b.grade() - a.grade())
+            .forEach(s -> System.out.printf("%-10s %d%n", s.name(), s.grade()));
+        
+        // Statistics
+        var stats = students.stream()
+            .mapToInt(Student::grade)
+            .summaryStatistics();
+        
+        System.out.printf("%nClass Average: %.1f%n", stats.getAverage());
+        System.out.printf("Highest Grade: %d%n", stats.getMax());
+        System.out.printf("Lowest Grade:  %d%n", stats.getMin());
+    }
+}`;
+  showToast('Sample code loaded! Click ▶ Run');
+}
+
+// ─── Progress Tracking ────────────────────────────────────
+let progressPercent = 0;
+function updateProgress() {
+  progressPercent = Math.min(progressPercent + Math.floor(Math.random() * 8) + 3, 100);
+  const circle = document.getElementById('progress-circle');
+  const circumference = 138.2;
+  const offset = circumference - (progressPercent / 100) * circumference;
+  circle.style.strokeDashoffset = offset;
+  document.getElementById('progress-value').textContent = progressPercent + '%';
+
+  const subs = ['Keep going! ☕', 'Great progress! 🚀', 'You\'re crushing it! 🔥', 'Java master! 🎓'];
+  document.getElementById('progress-sub').textContent = subs[Math.floor(progressPercent / 25)];
+}
+
+// ─── Utilities ─────────────────────────────────────────────
+function handleInputKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 140) + 'px';
+}
+
+function escapeHtml(text) {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function showToast(message, duration = 2500) {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), duration);
+}
+
+// ─── Init ──────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  loadTopics();
+
+  // Focus input
+  setTimeout(() => document.getElementById('chat-input').focus(), 100);
+
+  // Check server health
+  fetch(`${API_BASE}/health`)
+    .then(r => r.json())
+    .then(() => showToast('✅ JavaMentor AI connected'))
+    .catch(() => showToast('⚠️ Server offline — start with: uv run uvicorn java_mentor.fast_api_app:app --host 127.0.0.1 --port 8090', 5000));
+});
+</script>
+</body>
+</html>
