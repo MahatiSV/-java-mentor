@@ -33,6 +33,38 @@ JavaMentorOrchestrator (root_agent)
     ├── news_agent          — Java release notes (grounded KB)
     └── learning_path_agent — personalized roadmaps
 ```
+### High-Level Architecture
+
+```
+                ┌──────────────────────┐
+                │     Frontend UI      │
+                │ (Markdown + Mermaid) │
+                └─────────┬────────────┘
+                          │
+                          ▼
+                ┌──────────────────────┐
+                │   FastAPI Backend    │
+                └─────────┬────────────┘
+                          │
+                          ▼
+        ┌──────────────────────────────────┐
+        │ JavaMentor Orchestrator (ADK)    │
+        └──────────────────────────────────┘
+              │     │      │      │
+              ▼     ▼      ▼      ▼
+        Tutor  Quiz  Code  Interview  Learning
+         Agent  Agent Agent   Agent      Path
+              │
+              ▼
+        News / Knowledge Agent
+              │
+              ▼
+        MCP Tool Layer
+              │
+     ┌────────┴─────────┐
+     ▼                  ▼
+Piston API        Java Knowledge Base
+```
 
 Built with **Google ADK 2.3.0** + **Gemini 2.5 Flash** (free AI Studio tier).
 Code execution via **Piston API** — completely free, no API key required.
