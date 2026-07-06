@@ -89,12 +89,17 @@
     #app {
       display: grid;
       grid-template-rows: 56px 1fr;
-      grid-template-columns: 260px 1fr 360px;
+      grid-template-columns: 260px minmax(0, 1fr) minmax(280px, 360px);
       grid-template-areas:
         "header header header"
         "sidebar chat code";
       height: 100vh;
       gap: 0;
+      transition: grid-template-columns var(--transition);
+    }
+
+    #app.code-collapsed {
+      grid-template-columns: 260px minmax(0, 1fr) 52px;
     }
 
     /* ═══════════════════════════════════════════════════════════════
@@ -475,6 +480,7 @@
     .message-content {
       flex: 1;
       max-width: calc(100% - 44px);
+      min-width: 0;
     }
 
     .message-bubble {
@@ -482,6 +488,8 @@
       border-radius: var(--radius-lg);
       font-size: 14px;
       line-height: 1.7;
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
 
     .message.ai .message-bubble {
@@ -586,8 +594,9 @@
     .message-bubble pre {
       margin: 12px 0;
       border-radius: var(--radius-md);
-      overflow: hidden;
+      overflow: auto;
       border: 1px solid var(--border);
+      max-width: 100%;
     }
 
     .message-bubble pre code {
@@ -596,6 +605,8 @@
       padding: 0;
       color: inherit;
       font-size: 13px;
+      display: block;
+      white-space: pre;
     }
 
     .code-block-wrapper {
@@ -763,6 +774,7 @@
       flex-direction: column;
       background: var(--bg-surface);
       border-left: 1px solid var(--border);
+      min-width: 0;
     }
 
     .code-panel-header {
@@ -791,6 +803,11 @@
 
     .code-toolbar { display: flex; gap: 6px; }
 
+    .panel-toggle-btn {
+      min-width: 74px;
+      justify-content: center;
+    }
+
     .toolbar-btn {
       padding: 5px 12px;
       border-radius: var(--radius-sm);
@@ -815,6 +832,55 @@
     }
 
     .toolbar-btn.run:hover { background: linear-gradient(135deg, rgba(124,58,237,0.5), rgba(59,130,246,0.5)); }
+
+    #app.code-collapsed .code-panel-title,
+    #app.code-collapsed #code-editor,
+    #app.code-collapsed .output-panel,
+    #app.code-collapsed .toolbar-btn:not(.panel-toggle-btn) {
+      display: none;
+    }
+
+    #app.code-collapsed .code-panel-header {
+      height: 100%;
+      justify-content: center;
+      border-bottom: none;
+      padding: 8px;
+    }
+
+    #app.code-collapsed .code-toolbar {
+      width: 100%;
+      justify-content: center;
+    }
+
+    @media (max-width: 1320px) {
+      #app {
+        grid-template-columns: 240px minmax(0, 1fr) minmax(240px, 320px);
+      }
+
+      #app.code-collapsed {
+        grid-template-columns: 240px minmax(0, 1fr) 52px;
+      }
+    }
+
+    @media (max-width: 980px) {
+      #app,
+      #app.code-collapsed {
+        grid-template-columns: 1fr;
+        grid-template-rows: 56px 1fr auto;
+        grid-template-areas:
+          "header"
+          "chat"
+          "code";
+      }
+
+      #sidebar {
+        display: none;
+      }
+
+      #code-panel {
+        max-height: 40vh;
+      }
+    }
 
     #code-editor {
       flex: 1;
@@ -1059,6 +1125,7 @@
         Java Playground
       </div>
       <div class="code-toolbar">
+        <button class="toolbar-btn panel-toggle-btn" id="toggle-code-btn" onclick="toggleCodePanel()" title="Collapse or expand Java playground">◀ Hide</button>
         <button class="toolbar-btn" onclick="clearCode()" title="Clear code">🗑️ Clear</button>
         <button class="toolbar-btn" onclick="copyCode()" title="Copy code">📋 Copy</button>
         <button class="toolbar-btn run" id="run-btn" onclick="runCode()" title="Run Java code">
@@ -1156,13 +1223,31 @@ mermaid.initialize({
 // ─── Marked.js Config ─────────────────────────────────────
 const renderer = new marked.Renderer();
 renderer.code = function(code, language) {
-  const lang = language || '';
-  if (lang === 'mermaid') {
-    return `<div class="mermaid-wrapper"><div class="mermaid">${code}</div></div>`;
+  let rawCode = code;
+  let lang = language || '';
+
+  // Marked v12+ can pass a token object instead of (code, language).
+  if (code && typeof code === 'object') {
+    rawCode = code.text ?? code.raw ?? '';
+    lang = code.lang || code.language || lang;
   }
-  const highlightedCode = lang && hljs.getLanguage(lang)
-    ? hljs.highlight(code, { language: lang }).value
-    : hljs.highlightAuto(code).value;
+
+  rawCode = String(rawCode ?? '');
+  lang = String(lang ?? '').trim().toLowerCase();
+
+  if (lang === 'mermaid') {
+    return `<div class="mermaid-wrapper"><div class="mermaid">${escapeHtml(rawCode)}</div></div>`;
+  }
+
+  let highlightedCode = '';
+  try {
+    highlightedCode = lang && hljs.getLanguage(lang)
+      ? hljs.highlight(rawCode, { language: lang }).value
+      : hljs.highlightAuto(rawCode).value;
+  } catch {
+    highlightedCode = escapeHtml(rawCode);
+  }
+
   const isJava = lang === 'java' || lang === '';
   const runBtn = isJava
     ? `<button class="btn-run-code" onclick="runCodeFromChat(this)" title="Run in playground">▶ Run</button>`
@@ -1176,7 +1261,7 @@ renderer.code = function(code, language) {
           <button class="btn-copy-code" onclick="copyCodeBlock(this)" title="Copy">📋 Copy</button>
         </div>
       </div>
-      <pre><code class="hljs language-${lang}">${highlightedCode}</code></pre>
+      <pre><code class="hljs language-${lang || 'plaintext'}">${highlightedCode}</code></pre>
     </div>`;
 };
 
@@ -1275,7 +1360,6 @@ function askAbout(topic) {
   sendMessage();
 }
 
-// ─── Chat Sending ─────────────────────────────────────────
 async function sendMessage() {
   const input = document.getElementById('chat-input');
   const text = input.value.trim();
@@ -1284,15 +1368,12 @@ async function sendMessage() {
   const prefix = modePrefixes[currentMode] || '';
   const fullMessage = prefix + text;
 
-  // Clear input
   input.value = '';
   autoResize(input);
 
-  // Hide welcome screen
   const welcome = document.getElementById('welcome-screen');
   if (welcome) welcome.style.display = 'none';
 
-  // Show user message
   addMessage(text, 'user');
   setLoading(true);
 
@@ -1302,27 +1383,52 @@ async function sendMessage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         message: fullMessage,
-        session_id: sessionId,
+        session_id: sessionId || null,
         user_id: userId,
         level: currentLevel,
       }),
     });
 
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
 
-    const data = await res.json();
-    sessionId = data.session_id;
-    addMessage(data.response, 'ai', data.agent_used);
+    let data;
+    try {
+      data = await res.json();
+    } catch (jsonErr) {
+      throw new Error("Invalid JSON response from server");
+    }
+
+    console.log("🔥 API RESPONSE:", data);
+
+    sessionId = data.session_id || sessionId;
+
+    if (data.response) {
+      addMessage(
+        data.response,
+        'ai',
+        data.agent_used || 'tutor_agent'
+      );
+    } else {
+      addMessage("⚠️ Empty response from server", 'ai', 'System');
+    }
+
     updateProgress();
 
   } catch (err) {
+    console.error("Chat error:", err);
+
     addMessage(
-      `⚠️ **Connection Error**\n\nCouldn't reach the JavaMentor AI server.\n\n` +
+      `⚠️ **Connection Error**\n\n` +
+      `Couldn't reach the JavaMentor AI server.\n\n` +
       `Make sure the server is running:\n` +
       "```\nuv run uvicorn java_mentor.fast_api_app:app --host 127.0.0.1 --port 8090 --reload\n```\n\n" +
       `Error: ${err.message}`,
-      'ai', 'System'
+      'ai',
+      'System'
     );
+
   } finally {
     setLoading(false);
   }
@@ -1337,21 +1443,29 @@ function sendQuickMessage(text) {
 // ─── Message Rendering ────────────────────────────────────
 function addMessage(text, role, agentName) {
   const container = document.getElementById('chat-messages');
+
   const msgEl = document.createElement('div');
   msgEl.className = `message ${role}`;
 
   const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-  let contentHtml;
-  if (role === 'ai') {
-    contentHtml = marked.parse(text || '');
-  } else {
-    contentHtml = `<span>${escapeHtml(text)}</span>`;
+  let contentHtml = '';
+
+  try {
+    if (role === 'ai') {
+      contentHtml = marked.parse(normalizeMarkdown(text || ''));
+    } else {
+      contentHtml = `<span>${escapeHtml(text)}</span>`;
+    }
+  } catch (e) {
+    console.error("Markdown render failed:", e);
+    contentHtml = `<pre>${escapeHtml(text)}</pre>`;
   }
 
-  const agentTag = role === 'ai' && agentName && agentName !== 'unknown'
-    ? `<span class="agent-tag">${formatAgentName(agentName)}</span>`
-    : '';
+  const agentTag =
+    role === 'ai' && agentName && agentName !== 'unknown'
+      ? `<span class="agent-tag">${formatAgentName(agentName)}</span>`
+      : '';
 
   msgEl.innerHTML = `
     <div class="message-avatar">${role === 'ai' ? '🎓' : '👤'}</div>
@@ -1364,16 +1478,189 @@ function addMessage(text, role, agentName) {
     </div>
   `;
 
+  console.log("Rendering message:", text);
   container.appendChild(msgEl);
+  console.log(container.innerHTML);
 
-  // Render Mermaid diagrams
-  const mermaidEls = msgEl.querySelectorAll('.mermaid');
-  if (mermaidEls.length > 0) {
-    mermaid.init(undefined, mermaidEls);
+  // 🔥 CRITICAL: force DOM paint + scroll
+  requestAnimationFrame(() => {
+    container.scrollTop = container.scrollHeight;
+
+    // trigger code highlighting if available
+    if (window.hljs) {
+      msgEl.querySelectorAll('pre code').forEach((block) => {
+        hljs.highlightElement(block);
+      });
+    }
+
+    // trigger mermaid rendering if present
+    renderMermaidIn(msgEl);
+  });
+}
+
+function normalizeMarkdown(text) {
+  const raw = String(text || '');
+
+  // If the model returns pure Mermaid text without fences, wrap it.
+  const hasFence = /```/.test(raw);
+  const looksLikeMermaidStart = /(^|\n)\s*(flowchart|graph|classDiagram|sequenceDiagram|stateDiagram|erDiagram|journey|gantt|pie|mindmap|timeline)\b/i.test(raw);
+  const looksLikeMermaidEdges =
+    raw.includes('-->') ||
+    raw.includes('|--') ||
+    raw.includes('==>') ||
+    raw.includes('..>') ||
+    raw.includes(':::');
+  if (!hasFence && looksLikeMermaidStart && looksLikeMermaidEdges) {
+    return '```mermaid\n' + raw.trim() + '\n```';
   }
 
-  // Scroll to bottom
-  container.scrollTop = container.scrollHeight;
+  const fenceMatches = raw.match(/```/g);
+  const fenceCount = fenceMatches ? fenceMatches.length : 0;
+  if (fenceCount % 2 === 1) {
+    return raw + '\n```';
+  }
+  return raw;
+}
+
+function toggleCodePanel(forceCollapsed = null) {
+  const app = document.getElementById('app');
+  const btn = document.getElementById('toggle-code-btn');
+  if (!app || !btn) return;
+
+  const collapsed =
+    typeof forceCollapsed === 'boolean'
+      ? forceCollapsed
+      : !app.classList.contains('code-collapsed');
+
+  app.classList.toggle('code-collapsed', collapsed);
+  btn.textContent = collapsed ? '▶ Show' : '◀ Hide';
+  btn.title = collapsed ? 'Expand Java playground' : 'Collapse Java playground';
+}
+
+async function renderMermaidIn(root) {
+  if (!window.mermaid || !root) return;
+
+  const blocks = root.querySelectorAll('.mermaid:not([data-rendered="1"])');
+  for (const block of blocks) {
+    const definition = sanitizeMermaidDefinition((block.textContent || '').trim());
+    if (!definition) continue;
+
+    const id = 'mmd_' + Math.random().toString(36).slice(2, 10);
+    try {
+      const svg = await renderMermaidWithFallback(id, definition);
+      block.innerHTML = svg;
+    } catch (err) {
+      console.error('Mermaid render failed:', err);
+      block.innerHTML = `<pre>${escapeHtml(definition)}</pre>`;
+    }
+    block.dataset.rendered = '1';
+  }
+}
+
+async function renderMermaidWithFallback(id, definition) {
+  const variants = buildMermaidVariants(definition);
+  let lastError = null;
+
+  for (let i = 0; i < variants.length; i++) {
+    try {
+      const rendered = await mermaid.render(`${id}_${i}`, variants[i]);
+      return rendered.svg;
+    } catch (err) {
+      lastError = err;
+    }
+  }
+
+  throw lastError || new Error('Mermaid render failed');
+}
+
+function buildMermaidVariants(definition) {
+  const base = definition.trim();
+  const flowchartLabelsNormalized = normalizeFlowchartLabels(base);
+  const edgeLabelsRemoved = flowchartLabelsNormalized.replace(/\|[^|\n]+\|/g, '');
+
+  return [
+    base,
+    flowchartLabelsNormalized,
+    edgeLabelsRemoved,
+  ];
+}
+
+function normalizeFlowchartLabels(definition) {
+  const lines = definition.split('\n');
+  if (!lines.some((line) => /^\s*(flowchart|graph)\b/i.test(line))) {
+    return definition;
+  }
+
+  return lines
+    .map((line) => {
+      // Normalize node labels: A[text] -> A["text"] and B{decision?} -> B{"decision?"}
+      let next = line.replace(/\[(.*?)\]/g, (_m, label) => {
+        const clean = String(label)
+          .replace(/<br\s*\/?\s*>/gi, ' ')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .replace(/"/g, '\\"');
+        return `["${clean}"]`;
+      });
+
+      next = next.replace(/\{(.*?)\}/g, (_m, label) => {
+        const clean = String(label)
+          .replace(/<br\s*\/?\s*>/gi, ' ')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .replace(/"/g, '\\"');
+        return `{"${clean}"}`;
+      });
+
+      return next;
+    })
+    .join('\n');
+}
+
+function sanitizeMermaidDefinition(input) {
+  let text = String(input || '').replace(/\r\n/g, '\n').trim();
+
+  // Handle accidental nested fencing.
+  text = text.replace(/^```mermaid\s*/i, '').replace(/```\s*$/i, '').trim();
+
+  // Mermaid struggles with literal line breaks inside node labels. Convert them to <br/>.
+  let out = '';
+  let inLabel = false;
+  let labelCloser = '';
+
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+
+    if (!inLabel && (ch === '[' || ch === '{')) {
+      inLabel = true;
+      labelCloser = ch === '[' ? ']' : '}';
+      out += ch;
+      continue;
+    }
+
+    if (inLabel && ch === labelCloser) {
+      inLabel = false;
+      labelCloser = '';
+      out += ch;
+      continue;
+    }
+
+    if (inLabel && ch === '\n') {
+      if (!out.endsWith('<br/>')) out += '<br/>';
+      continue;
+    }
+
+    out += ch;
+  }
+
+  // Remove line-ending semicolons to reduce parser sensitivity.
+  out = out
+    .split('\n')
+    .map((line) => line.trimEnd().replace(/;\s*$/, ''))
+    .join('\n')
+    .trim();
+
+  return out;
 }
 
 function formatAgentName(name) {
@@ -1464,6 +1751,8 @@ async function runCode() {
 }
 
 function runCodeFromChat(btn) {
+  toggleCodePanel(false);
+
   // Find the code block and load it into the editor
   const pre = btn.closest('.code-block-wrapper').querySelector('code');
   if (!pre) return;
@@ -1573,6 +1862,10 @@ function showToast(message, duration = 2500) {
 // ─── Init ──────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   loadTopics();
+
+  if (window.innerWidth < 1320) {
+    toggleCodePanel(true);
+  }
 
   // Focus input
   setTimeout(() => document.getElementById('chat-input').focus(), 100);

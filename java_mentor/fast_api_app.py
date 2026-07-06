@@ -109,11 +109,15 @@ async def chat(request: ChatRequest):
 
     # Ensure session exists.
     try:
-        session_service.get_session(
+        session = await session_service.get_session(
             app_name=APP_NAME, user_id=user_id, session_id=session_id
         )
+        if session is None:
+            await session_service.create_session(
+                app_name=APP_NAME, user_id=user_id, session_id=session_id
+            )
     except Exception:
-        session_service.create_session(
+        await session_service.create_session(
             app_name=APP_NAME, user_id=user_id, session_id=session_id
         )
 
