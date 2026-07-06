@@ -65,9 +65,19 @@ JavaMentorOrchestrator (root_agent)
      ▼                  ▼
 Piston API        Java Knowledge Base
 ```
+The system separates:
 
-Built with **Google ADK 2.3.0** + **Gemini 2.5 Flash** (free AI Studio tier).
-Code execution via **Piston API** — completely free, no API key required.
+- **Reasoning** → Gemini-powered agents through Google ADK
+- **Orchestration** → Root agent routing and coordination
+- **Execution** → MCP tools and external capabilities
+- **Verification** → Runtime results and structured knowledge sources
+
+This allows JavaMentor AI to combine AI reasoning with deterministic execution where correctness matters.
+
+---
+
+Built with Google ADK + Gemini 2.5 Flash (AI Studio tier).
+Code execution is powered by **Piston API**, providing sandboxed Java runtime execution without requiring a separate setup.
 
 ---
 
@@ -143,7 +153,7 @@ uv run pytest tests/unit/ -v
 
 | Component | Technology | Cost |
 |-----------|-----------|------|
-| Agent framework | Google ADK 2.3.0 | Free |
+| Agent framework | Google ADK | Free |
 | LLM | Gemini 2.5 Flash | Free (AI Studio) |
 | Backend | FastAPI + Uvicorn | Free |
 | MCP server | fastmcp | Free |
@@ -161,7 +171,7 @@ uv run pytest tests/unit/ -v
 ```
 java-mentor/
 ├── java_mentor/
-│   ├── agent.py          # All 7 agents (orchestrator + 6 specialists)
+│   ├── agent.py          # Root orchestrator + specialist agents
 │   ├── tools.py          # Code execution + knowledge base tools
 │   ├── config.py         # Model config + Java version knowledge base
 │   ├── mcp_server.py     # MCP server (fastmcp)
@@ -174,6 +184,78 @@ java-mentor/
 │   └── eval/             # Eval tests (skipped by default)
 └── .env                  # API key (not committed)
 ```
+
+## 🧠 Engineering Highlights
+
+### Multi-Agent over Monolithic Chat
+
+Instead of a single general-purpose chatbot, JavaMentor AI uses specialized agents:
+
+- Tutor Agent → explanations and visual learning
+- Quiz Agent → assessment and adaptive practice
+- Code Agent → execution, debugging, and validation
+- Interview Agent → technical interview simulation
+- Learning Path Agent → personalized progression
+- News Agent → Java version-aware updates
+
+Each agent has a focused responsibility, making the system modular and extensible.
+
+---
+
+### Grounded Learning Experience
+
+JavaMentor AI reduces unreliable AI responses by combining:
+
+- Versioned Java feature knowledge base
+- Real Java execution through Piston API
+- Tool-based information retrieval
+- Structured agent responsibilities
+
+For code-related questions, the system executes programs instead of only predicting outputs.
+
+---
+
+## 🚀 Future Enhancements
+
+The current system provides the foundation for a larger adaptive learning platform.
+
+Planned improvements:
+
+- **Persistent learner memory**
+  - Maintain progress, strengths, and learning gaps across sessions
+
+- **Agent Skills framework**
+  - Modular capability packages that can be loaded when required
+
+- **Trajectory evaluation**
+  - Measure learning progress and evaluate reasoning paths
+
+- **Enhanced documentation grounding**
+  - RAG-based retrieval from official Java and Spring documentation
+
+- **GitHub learning assistant**
+  - Analyze repositories and provide personalized improvement guidance
+
+- **Voice-based learning mode**
+  - Conversational Java mentoring experience
+
+The long-term vision is to evolve JavaMentor AI from an adaptive assistant into a complete AI-powered Java learning ecosystem.
+
+---
+
+## 🎥 Demo
+
+A complete end-to-end demonstration is available in the submitted demo video.
+
+The demo showcases:
+
+- Adaptive Java concept explanation
+- Mermaid-based visual learning
+- Agent-driven response generation
+- Java code execution workflow
+- Tool integration through MCP
+
+---
 
 ---
 
