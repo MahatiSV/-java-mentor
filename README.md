@@ -7,9 +7,9 @@
 
 ---
 
-## ✨ What It Does
+## ✨ Problem & Solution
 
-JavaMentor AI is a multi-agent system that adapts to your Java skill level and provides:
+JavaMentor AI addresses the fragmented nature of Java learning by combining adaptive tutoring, deterministic code execution, and specialized AI agents into a single learning platform.
 
 | Feature | Description |
 |---------|-------------|
@@ -254,8 +254,6 @@ The demo showcases:
 - Agent-driven response generation
 - Java code execution workflow
 - Tool integration through MCP
-
----
 
 ---
 
