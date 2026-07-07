@@ -3,7 +3,7 @@
 > **Your adaptive Java learning companion** — from "Hello World" to Virtual Threads,
 > Spring Boot to interview prep. Built with Google ADK for the Google × Kaggle 2026 competition.
 
-![JavaMentor AI — Multi-agent Java learning platform](./assets/cover_page_banner.png)
+![JavaMentor AI — Multi-agent Java learning platform](./assets/ui.png)
 
 ---
 
